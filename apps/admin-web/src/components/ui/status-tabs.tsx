@@ -67,7 +67,7 @@ export function StatusTabs({
             variant="ghost"
             onClick={() => onStatusChange(tab.key)}
             className={cn(
-              'group relative min-w-0 flex-1 overflow-hidden py-4 px-6 text-center text-sm font-medium hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-200',
+              'group relative min-w-0 flex-1 overflow-hidden py-4 px-6 text-center text-sm font-medium hover:bg-gray-50 focus:z-10 focus:outline-none transition-all duration-200',
               {
                 'border-b-2 border-teal-500 text-teal-600 bg-teal-50':
                   activeStatus === tab.key,

@@ -34,6 +34,7 @@ export function UploadDropzone({
     isDragActive,
     isDragReject,
     fileRejections,
+    open,
   } = useDropzone({
     onDrop,
     accept: {
@@ -44,6 +45,7 @@ export function UploadDropzone({
     },
     maxSize,
     multiple,
+    noClick: true,
   });
 
   const hasErrors = fileRejections.length > 0;
@@ -53,13 +55,12 @@ export function UploadDropzone({
       <div
         {...getRootProps()}
         className={cn(
-          'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200',
+          'border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200',
           {
             'border-teal-300 bg-teal-50 text-teal-700':
               isDragActive && !isDragReject,
             'border-red-300 bg-red-50 text-red-700': isDragReject || hasErrors,
-            'border-gray-300 hover:border-gray-400 hover:bg-gray-50':
-              !isDragActive && !hasErrors,
+            'border-gray-300': !isDragActive && !hasErrors,
           }
         )}
       >
@@ -90,7 +91,15 @@ export function UploadDropzone({
           </div>
 
           <div className="flex justify-center space-x-4">
-            <Button variant="outline">选择文件</Button>
+            <Button
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                open();
+              }}
+            >
+              选择文件
+            </Button>
 
             {onTemplateDownload && (
               <Button

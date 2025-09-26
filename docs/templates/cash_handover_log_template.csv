@@ -1,0 +1,4 @@
+handover_batch_id,store_code,store_name,beautician_id,beautician_name,period_start,period_end,total_cash_expected,total_cash_reported,total_cash_received,variance,variance_reason,handover_date,handover_method,handover_channel,received_by,approved_by,recorded_by,recorded_at,attachments,notes,status
+H2025-09-B1-01,B1,Central Store,,ALL,2025-09-01,2025-09-25,8200,8200,8200,0,,2025-09-25,In-person,Cash,Leon,PartnerA,Leon,2025-09-25 21:30,receipt-20250925.jpg,Periodical cash drop completed,Closed
+H2025-09-B2-02,B2,River Store,B2-WQ,Wang Qiang,2025-09-01,2025-09-25,9100,9050,9000,-100,Cash short due to delayed client payment,2025-09-25,In-person,Cash,PartnerA,Leon,PartnerA,2025-09-25 22:10,receipt-20250925-b2.jpg,Pending follow-up on 100 shortage,Open
+H2025-09-B3-01,B3,Harbor Store,,ALL,2025-09-15,2025-09-26,560,560,0,-560,Handover pending (no deposit yet),,,Cash,Leon,PartnerA,Leon,2025-09-26 22:45,,Awaiting first settlement,Open

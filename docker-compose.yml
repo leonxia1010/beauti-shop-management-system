@@ -1,0 +1,143 @@
+# Docker Compose file for Beauty Shop Management System
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: beauty-shop-postgres
+    environment:
+      POSTGRES_DB: beauty_shop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/db-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beauty-shop-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: beauty-shop-redis
+    command: redis-server --requirepass redis_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beauty-shop-network
+
+  # NestJS API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./apps/api-gateway/Dockerfile
+      target: development
+    container_name: beauty-shop-api
+    ports:
+      - "3000:3000"
+      - "9229:9229" # Debug port
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/beauty_shop
+      REDIS_URL: redis://:redis_password@redis:6379
+      JWT_SECRET: your-jwt-secret-key
+      # AWS Secrets Manager equivalent variables
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: beauty_shop
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis_password
+    volumes:
+      - ./apps/api-gateway:/app
+      - ./libs:/libs
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - beauty-shop-network
+
+  # Background Jobs Service
+  batch-jobs:
+    build:
+      context: .
+      dockerfile: ./apps/batch-jobs/Dockerfile
+      target: development
+    container_name: beauty-shop-jobs
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/beauty_shop
+      REDIS_URL: redis://:redis_password@redis:6379
+      # AWS Secrets Manager equivalent variables
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: beauty_shop
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis_password
+    volumes:
+      - ./apps/batch-jobs:/app
+      - ./libs:/libs
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - beauty-shop-network
+
+  # Admin Web Frontend (Development Server)
+  admin-web:
+    build:
+      context: .
+      dockerfile: ./apps/admin-web/Dockerfile
+      target: development
+    container_name: beauty-shop-admin
+    ports:
+      - "4200:4200"
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+    volumes:
+      - ./apps/admin-web:/app
+      - ./libs:/libs
+      - /app/node_modules
+    networks:
+      - beauty-shop-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  beauty-shop-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        # Private subnet simulation for local development
+        # Matches private subnet assumptions in architecture
+        - subnet: 172.20.0.0/16

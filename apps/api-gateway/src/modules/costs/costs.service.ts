@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { ExceptionDetectionService } from '../exception-detection/exception-detection.service';
 import {
   CreateCostEntryDto,
   UpdateCostEntryDto,
@@ -16,7 +17,8 @@ export class CostsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
+    private readonly exceptionDetectionService: ExceptionDetectionService
   ) {}
 
   /**
@@ -26,6 +28,9 @@ export class CostsService {
     const costEntry = await this.prisma.costEntry.create({
       data,
     });
+
+    // Run exception detection after creation
+    await this.exceptionDetectionService.validateCostData(data, costEntry.id);
 
     // Log the creation in audit trail
     await this.auditService.logAction({
@@ -248,31 +253,12 @@ export class CostsService {
     isValid: boolean;
     exceptions: string[];
   }> {
-    const exceptions: string[] = [];
-
-    // Check for negative amounts
-    if (data.amount <= 0) {
-      exceptions.push('Amount must be positive');
-    }
-
-    // Check for unrealistic amounts (example: over $100,000)
-    if (data.amount > 100000) {
-      exceptions.push('Amount seems unusually high (over $100,000)');
-    }
-
-    // Check for empty category
-    if (!data.category.trim()) {
-      exceptions.push('Category cannot be empty');
-    }
-
-    // Check for empty payer
-    if (!data.payer.trim()) {
-      exceptions.push('Payer cannot be empty');
-    }
+    // Use the new exception detection service
+    const result = await this.exceptionDetectionService.validateCostData(data);
 
     return {
-      isValid: exceptions.length === 0,
-      exceptions,
+      isValid: result.isValid,
+      exceptions: result.exceptions.map((ex) => ex.message),
     };
   }
 }

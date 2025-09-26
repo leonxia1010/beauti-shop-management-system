@@ -89,6 +89,53 @@ enum AuditAction {
   @@map("audit_action")
 }
 
+// Exception records table for storing detected anomalies
+model ExceptionRecord {
+  id           String           @id @default(cuid())
+  table_name   String           // 'service_sessions' or 'cost_entries'
+  record_id    String           // ID of the problematic record
+  exception_type ExceptionType
+  severity     ExceptionSeverity
+  message      String           // Human-readable description
+  field_name   String?          // Which field caused the exception
+  field_value  String?          // The problematic value
+  rule_name    String           // Name of the validation rule that failed
+  store_id     String           // For store-scoped access
+  resolved     Boolean          @default(false)
+  resolved_by  String?          // Who resolved the exception
+  resolved_at  DateTime?        // When it was resolved
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+
+  @@map("exception_records")
+  @@index([table_name])
+  @@index([record_id])
+  @@index([store_id])
+  @@index([severity])
+  @@index([resolved])
+  @@index([created_at])
+}
+
+// Exception type enumeration
+enum ExceptionType {
+  VALIDATION_ERROR
+  BUSINESS_RULE_VIOLATION
+  DATA_ANOMALY
+  SUSPICIOUS_ACTIVITY
+
+  @@map("exception_type")
+}
+
+// Exception severity enumeration
+enum ExceptionSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("exception_severity")
+}
+
 // Payment method enumeration
 enum PaymentMethod {
   cash

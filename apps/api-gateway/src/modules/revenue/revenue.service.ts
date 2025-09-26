@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ExceptionDetectionService } from '../exception-detection/exception-detection.service';
 import {
   CreateServiceSessionDto,
   UpdateServiceSessionDto,
@@ -11,7 +12,10 @@ import { ServiceSession, Prisma } from '@prisma/client';
 export class RevenueService {
   private readonly logger = new Logger(RevenueService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly exceptionDetectionService: ExceptionDetectionService
+  ) {}
 
   /**
    * Create a single service session record
@@ -27,6 +31,9 @@ export class RevenueService {
     const session = await this.prisma.serviceSession.create({
       data: sessionData,
     });
+
+    // Run exception detection after creation
+    await this.exceptionDetectionService.validateRevenueData(data, session.id);
 
     this.logger.log(
       `Created service session ${session.id} for store ${session.store_id}`
@@ -191,30 +198,14 @@ export class RevenueService {
     isValid: boolean;
     exceptions: string[];
   }> {
-    const exceptions: string[] = [];
-
-    // Check for negative amounts
-    if (data.gross_revenue <= 0) {
-      exceptions.push('Gross revenue must be positive');
-    }
-
-    // Check for future dates
-    const serviceDate = new Date(data.service_date);
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // End of today
-
-    if (serviceDate > today) {
-      exceptions.push('Service date cannot be in the future');
-    }
-
-    // Check for unrealistic amounts (example: over $10,000)
-    if (data.gross_revenue > 10000) {
-      exceptions.push('Gross revenue seems unusually high (over $10,000)');
-    }
+    // Use the new exception detection service
+    const result = await this.exceptionDetectionService.validateRevenueData(
+      data
+    );
 
     return {
-      isValid: exceptions.length === 0,
-      exceptions,
+      isValid: result.isValid,
+      exceptions: result.exceptions.map((ex) => ex.message),
     };
   }
 }

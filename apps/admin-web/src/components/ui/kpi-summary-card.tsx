@@ -5,7 +5,8 @@ import {
   DollarSign,
   AlertTriangle,
   Banknote,
-  Users,
+  HandCoins,
+  UserCheck,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from './card';
 import { Badge } from './badge';
@@ -46,7 +47,10 @@ export function KPISummaryCard({ data, className }: KPISummaryCardProps) {
 
   return (
     <Card
-      className={cn('transition-all duration-200 hover:shadow-md', className)}
+      className={cn(
+        '@container/card bg-gradient-to-br from-emerald-50 via-white to-emerald-100/40 border shadow-xs transition-all duration-200 hover:shadow-md',
+        className
+      )}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
@@ -54,7 +58,7 @@ export function KPISummaryCard({ data, className }: KPISummaryCardProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          <p className="text-2xl font-bold">
+          <p className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
           {subtitle && (
@@ -108,7 +112,7 @@ export function KPIDashboard({ className, children }: KPIDashboardProps) {
   return (
     <div
       className={cn(
-        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
+        'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
         className
       )}
     >
@@ -169,15 +173,27 @@ export function CashHandoverCard({
   className,
 }: CashHandoverKPIProps) {
   return (
-    <KPISummaryCard
-      data={{
-        title: '未交接现金',
-        value: `¥${pendingCash.toFixed(2)}`,
-        subtitle: `${batchCount} 个批次`,
-        status: pendingCash > 0 ? 'warning' : 'success',
-      }}
-      className={className}
-    />
+    <Card
+      className={cn(
+        '@container/card bg-gradient-to-br from-amber-50 via-white to-amber-100/40 border shadow-xs transition-all duration-200 hover:shadow-md',
+        className
+      )}
+    >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <h3 className="text-sm font-medium text-muted-foreground">
+          未交接现金
+        </h3>
+        <HandCoins className="h-5 w-5 text-yellow-600" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-1">
+          <p className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            ¥{pendingCash.toFixed(2)}
+          </p>
+          <p className="text-sm text-muted-foreground">{batchCount} 个批次</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -191,15 +207,34 @@ export function ExceptionCard({
   className,
 }: ExceptionKPIProps) {
   return (
-    <KPISummaryCard
-      data={{
-        title: '异常待处理',
-        value: `${exceptionCount}`,
-        subtitle: exceptionCount > 0 ? '需要处理' : '无异常',
-        status: exceptionCount > 0 ? 'error' : 'success',
-      }}
-      className={className}
-    />
+    <Card
+      className={cn(
+        '@container/card bg-gradient-to-br from-red-50 via-white to-red-100/40 border shadow-xs transition-all duration-200 hover:shadow-md',
+        className
+      )}
+    >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <h3 className="text-sm font-medium text-muted-foreground">
+          异常待处理
+        </h3>
+        <AlertTriangle
+          className={cn(
+            'h-5 w-5',
+            exceptionCount > 0 ? 'text-red-600' : 'text-green-600'
+          )}
+        />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-1">
+          <p className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {exceptionCount}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {exceptionCount > 0 ? '需要处理' : '无异常'}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -215,14 +250,26 @@ export function BeauticianCard({
   className,
 }: BeauticianKPIProps) {
   return (
-    <KPISummaryCard
-      data={{
-        title: '美容师',
-        value: activeCount,
-        subtitle: `共 ${beauticianCount} 人`,
-        status: 'info',
-      }}
-      className={className}
-    />
+    <Card
+      className={cn(
+        '@container/card bg-gradient-to-br from-blue-50 via-white to-blue-100/40 border shadow-xs transition-all duration-200 hover:shadow-md',
+        className
+      )}
+    >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <h3 className="text-sm font-medium text-muted-foreground">美容师</h3>
+        <UserCheck className="h-5 w-5 text-blue-600" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-1">
+          <p className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {activeCount}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            共 {beauticianCount} 人
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

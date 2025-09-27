@@ -13,10 +13,11 @@ interface KPICardProps {
 }
 
 const COLOR_SCHEMES = {
-  teal: 'from-emerald-50 via-white to-emerald-100/40 text-teal-600',
-  amber: 'from-amber-50 via-white to-amber-100/40 text-yellow-600',
-  red: 'from-red-50 via-white to-red-100/40 text-red-600',
-  blue: 'from-blue-50 via-white to-blue-100/40 text-blue-600',
+  teal: 'from-emerald-400/10 via-teal-400/5 to-cyan-400/10 text-teal-700 border-teal-200/30',
+  amber:
+    'from-orange-400/10 via-amber-400/5 to-yellow-400/10 text-amber-700 border-amber-200/30',
+  red: 'from-rose-400/10 via-pink-400/5 to-red-400/10 text-red-700 border-red-200/30',
+  blue: 'from-blue-400/10 via-indigo-400/5 to-purple-400/10 text-blue-700 border-blue-200/30',
 };
 
 export function KPICard({

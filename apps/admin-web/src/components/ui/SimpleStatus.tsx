@@ -41,7 +41,7 @@ export function StatusTabs({
 
   return (
     <div className={cn('border-b border-gray-200', className)}>
-      <nav className="flex space-x-8">
+      <nav className="flex justify-between w-full">
         {statuses.map((status) => {
           const config = getStatusConfig(status);
           const Icon = config.icon;
@@ -53,7 +53,7 @@ export function StatusTabs({
               variant="ghost"
               onClick={() => onStatusChange(status)}
               className={cn(
-                'relative py-4 px-6 text-sm font-medium rounded-none border-b-2 transition-all duration-200',
+                'relative py-4 px-2 text-sm font-medium rounded-none border-b-2 transition-all duration-200 flex-1 text-center',
                 {
                   'border-teal-500 text-teal-600 bg-teal-50': isActive,
                   'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50':
@@ -61,7 +61,7 @@ export function StatusTabs({
                 }
               )}
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center space-x-1.5">
                 <Icon className="h-4 w-4" />
                 <span>{config.label}</span>
                 <Badge

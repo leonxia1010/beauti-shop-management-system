@@ -16,7 +16,6 @@ interface UploadDropzoneProps {
 export function UploadDropzone({
   onFileSelect,
   onTemplateDownload,
-  acceptedTypes = ['.xlsx', '.csv'],
   maxSize = 10 * 1024 * 1024, // 10MB
   multiple = false,
   className,

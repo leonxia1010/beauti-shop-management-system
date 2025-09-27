@@ -1,24 +1,21 @@
 import React, { useState } from 'react';
+import { DollarSign, AlertTriangle } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import {
   Stepper,
   StepperForm,
   StepContent,
-} from '../../components/ui/stepper-form';
+} from '../../components/ui/StepperForm';
 import {
   UploadDropzone,
   FilePreview,
-} from '../../components/ui/upload-dropzone';
+} from '../../components/ui/UploadDropzone';
 import {
   ValidationSummary,
   ProgressBar,
   ValidationResult,
-} from '../../components/ui/validation-summary';
-import {
-  KPIDashboard,
-  NetRevenueCard,
-  ExceptionCard,
-} from '../../components/ui/kpi-summary-card';
+} from '../../components/ui/ValidationSummary';
+import { KPICard, KPIDashboard } from '../../components/ui/SimpleKpiCard';
 
 interface ImportRecord {
   id: string;
@@ -293,11 +290,21 @@ export function BulkImportPage() {
                     </div>
 
                     <KPIDashboard>
-                      <NetRevenueCard
-                        netRevenue={21450.75}
-                        previousNetRevenue={19800.5}
+                      <KPICard
+                        title="净收入增加"
+                        value={`¥${(21450.75).toFixed(2)}`}
+                        icon={DollarSign}
+                        colorScheme="teal"
                       />
-                      <ExceptionCard exceptionCount={importResult.failed} />
+                      <KPICard
+                        title="导入失败"
+                        value={importResult.failed.toString()}
+                        subtitle={
+                          importResult.failed > 0 ? '需要处理' : '无异常'
+                        }
+                        icon={AlertTriangle}
+                        colorScheme="red"
+                      />
                     </KPIDashboard>
 
                     <div className="flex justify-center space-x-4">

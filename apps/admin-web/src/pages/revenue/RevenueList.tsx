@@ -1,24 +1,33 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, Download, Filter } from 'lucide-react';
-import { Button } from '../../components/ui/button';
 import {
-  KPIDashboard,
-  NetRevenueCard,
-  CashHandoverCard,
-  ExceptionCard,
-  BeauticianCard,
-} from '../../components/ui/kpi-summary-card';
+  Plus,
+  Upload,
+  Download,
+  Filter,
+  DollarSign,
+  HandCoins,
+  AlertTriangle,
+  UserCheck,
+} from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { KPICard, KPIDashboard } from '../../components/ui/SimpleKpiCard';
 import {
   StatusTabs,
   StatusFilter,
   StatusIndicator,
-  useStatusCounts,
-  classifyRevenueStatus,
+} from '../../components/ui/SimpleStatus';
+import { SimpleTable } from '../../components/ui/SimpleTable';
+import { EditableCell } from '../../components/ui/CellEditor';
+import { BulkActions } from '../../components/ui/BulkActions';
+import { useTableSelection } from '../../hooks/useTableSelection';
+import {
   StatusType,
-} from '../../components/ui/status-tabs';
-import { EditableTable, Column } from '../../components/ui/editable-table';
+  classifyRevenueStatus,
+  calculateStatusCounts,
+} from '../../lib/status';
+import { TableColumn } from '../../lib/table';
 
-interface RevenueRecord {
+interface RevenueRecord extends Record<string, unknown> {
   id: string;
   store_id: string;
   beautician_id: string;
@@ -84,8 +93,21 @@ export function RevenueListPage() {
   const [revenueData, setRevenueData] = useState(mockRevenueData);
   const [loading, setLoading] = useState(false);
 
+  // Table selection
+  const {
+    selectedRows,
+    handleSelectAll,
+    handleSelectRow,
+    clearSelection,
+    selectedCount,
+    selectedKeys,
+  } = useTableSelection(revenueData);
+
   // Calculate status counts
-  const statusCounts = useStatusCounts(revenueData, classifyRevenueStatus);
+  const statusCounts = calculateStatusCounts(
+    revenueData,
+    classifyRevenueStatus
+  );
 
   // KPI calculations
   const kpiData = useMemo(() => {
@@ -115,59 +137,92 @@ export function RevenueListPage() {
     };
   }, [revenueData]);
 
-  const columns: Column<RevenueRecord>[] = [
+  const columns: TableColumn<RevenueRecord>[] = [
     {
       key: 'service_date',
       title: '日期',
       width: '120px',
-      editable: true,
-      editType: 'date',
+      render: (value, record) => (
+        <EditableCell
+          value={value}
+          record={record}
+          config={{ field: 'service_date', type: 'date' }}
+          onEdit={handleEdit}
+        />
+      ),
     },
     {
       key: 'beautician_name',
       title: '美容师',
       width: '100px',
-      editable: true,
-      editType: 'select',
-      editOptions: [
-        { label: '小美', value: '小美' },
-        { label: '小雅', value: '小雅' },
-        { label: '小琳', value: '小琳' },
-      ],
+      render: (value, record) => (
+        <EditableCell
+          value={value}
+          record={record}
+          config={{
+            field: 'beautician_name',
+            type: 'select',
+            options: [
+              { label: '小美', value: '小美' },
+              { label: '小雅', value: '小雅' },
+              { label: '小琳', value: '小琳' },
+            ],
+          }}
+          onEdit={handleEdit}
+        />
+      ),
     },
     {
       key: 'gross_revenue',
       title: '总金额',
       width: '120px',
-      editable: true,
-      render: (value) => `¥${value.toFixed(2)}`,
+      render: (value, record) => (
+        <EditableCell
+          value={value}
+          record={record}
+          config={{ field: 'gross_revenue', type: 'input' }}
+          onEdit={handleEdit}
+          render={(value) => `¥${(value as number).toFixed(2)}`}
+        />
+      ),
     },
     {
       key: 'beautician_share',
       title: '美容师分成',
       width: '120px',
-      render: (value) => `¥${value.toFixed(2)}`,
+      render: (value) => `¥${(value as number).toFixed(2)}`,
     },
     {
       key: 'net_revenue',
       title: '净收入',
       width: '120px',
-      render: (value) => `¥${value.toFixed(2)}`,
+      render: (value) => `¥${(value as number).toFixed(2)}`,
     },
     {
       key: 'payment_method',
       title: '支付方式',
       width: '100px',
-      editable: true,
-      editType: 'select',
-      editOptions: [
-        { label: '现金', value: 'cash' },
-        { label: '转账', value: 'transfer' },
-        { label: '其他', value: 'other' },
-      ],
-      render: (value) => {
+      render: (value, record) => {
         const labels = { cash: '现金', transfer: '转账', other: '其他' };
-        return labels[value as keyof typeof labels] || value;
+        return (
+          <EditableCell
+            value={value}
+            record={record}
+            config={{
+              field: 'payment_method',
+              type: 'select',
+              options: [
+                { label: '现金', value: 'cash' },
+                { label: '转账', value: 'transfer' },
+                { label: '其他', value: 'other' },
+              ],
+            }}
+            onEdit={handleEdit}
+            render={(value) =>
+              labels[value as keyof typeof labels] || String(value)
+            }
+          />
+        );
       },
     },
     {
@@ -183,7 +238,7 @@ export function RevenueListPage() {
   const handleEdit = async (
     record: RevenueRecord,
     field: keyof RevenueRecord,
-    newValue: any
+    newValue: unknown
   ) => {
     // Simulate API call
     setLoading(true);
@@ -201,15 +256,16 @@ export function RevenueListPage() {
     }
   };
 
-  const handleBulkAction = async (selectedIds: string[], action: string) => {
-    console.log('Bulk action:', action, 'for items:', selectedIds);
+  const handleBulkAction = async (action: string) => {
+    console.log('Bulk action:', action, 'for items:', selectedKeys);
 
     if (action === 'confirm') {
       setRevenueData((prev) =>
         prev.map((item) =>
-          selectedIds.includes(item.id) ? { ...item, confirmed: true } : item
+          selectedKeys.includes(item.id) ? { ...item, confirmed: true } : item
         )
       );
+      clearSelection();
     }
   };
 
@@ -247,18 +303,32 @@ export function RevenueListPage() {
 
         {/* KPI Dashboard */}
         <KPIDashboard className="mb-8">
-          <NetRevenueCard
-            netRevenue={kpiData.totalRevenue}
-            previousNetRevenue={kpiData.totalRevenue * 0.9}
+          <KPICard
+            title="今日净收入"
+            value={`¥${kpiData.totalRevenue.toFixed(2)}`}
+            icon={DollarSign}
+            colorScheme="teal"
           />
-          <CashHandoverCard
-            pendingCash={kpiData.pendingCash}
-            batchCount={kpiData.cashBatchCount}
+          <KPICard
+            title="未交接现金"
+            value={`¥${kpiData.pendingCash.toFixed(2)}`}
+            subtitle={`${kpiData.cashBatchCount} 个批次`}
+            icon={HandCoins}
+            colorScheme="amber"
           />
-          <ExceptionCard exceptionCount={kpiData.exceptionCount} />
-          <BeauticianCard
-            beauticianCount={kpiData.beauticianCount}
-            activeCount={kpiData.activeBeauticians}
+          <KPICard
+            title="异常待处理"
+            value={kpiData.exceptionCount.toString()}
+            subtitle={kpiData.exceptionCount > 0 ? '需要处理' : '无异常'}
+            icon={AlertTriangle}
+            colorScheme="red"
+          />
+          <KPICard
+            title="美容师"
+            value={kpiData.activeBeauticians.toString()}
+            subtitle={`共 ${kpiData.beauticianCount} 人`}
+            icon={UserCheck}
+            colorScheme="blue"
           />
         </KPIDashboard>
 
@@ -270,20 +340,32 @@ export function RevenueListPage() {
             counts={statusCounts}
           />
 
-          {/* Table */}
-          <div className="p-6">
+          {/* Bulk Actions */}
+          <div className="p-6 space-y-4">
+            <BulkActions
+              selectedCount={selectedCount}
+              actions={[
+                { label: '批量确认', value: 'confirm' },
+                { label: '批量删除', value: 'delete' },
+                { label: '导出选中', value: 'export' },
+              ]}
+              onAction={handleBulkAction}
+            />
+
+            {/* Table */}
             <StatusFilter
               activeStatus={activeStatus}
               data={revenueData}
               getItemStatus={classifyRevenueStatus}
             >
               {(filteredData) => (
-                <EditableTable
+                <SimpleTable
                   data={filteredData}
                   columns={columns}
-                  onEdit={handleEdit}
-                  onBulkAction={handleBulkAction}
                   selectable={true}
+                  selectedRows={selectedRows}
+                  onSelectAll={handleSelectAll}
+                  onSelectRow={handleSelectRow}
                   loading={loading}
                 />
               )}

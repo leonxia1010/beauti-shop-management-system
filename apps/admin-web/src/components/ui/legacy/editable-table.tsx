@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Edit2, Check, X, ChevronDown, MoreHorizontal } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from './button';
-import { Input } from './input';
-import { Checkbox } from './checkbox';
+import { cn } from '../../../lib/utils';
+import { Button } from '../button';
+import { Input } from '../input';
+import { Checkbox } from '../checkbox';
 import {
   Table,
   TableBody,
@@ -11,15 +11,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from './table';
+} from '../table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './select';
-import { DatePicker } from './date-picker';
+} from '../select';
+import { DatePicker } from '../DatePicker';
 
 export interface Column<T> {
   key: keyof T | string;

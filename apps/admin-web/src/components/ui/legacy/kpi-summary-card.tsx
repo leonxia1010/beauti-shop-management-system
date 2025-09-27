@@ -8,9 +8,9 @@ import {
   HandCoins,
   UserCheck,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader } from './card';
-import { Badge } from './badge';
-import { cn } from '../../lib/utils';
+import { Card, CardContent, CardHeader } from '../card';
+import { Badge } from '../badge';
+import { cn } from '../../../lib/utils';
 
 export interface KPIData {
   title: string;

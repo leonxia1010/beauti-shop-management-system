@@ -12,11 +12,9 @@ const paymentMethodSchema = z.nativeEnum(PaymentMethod, {
 });
 
 // Service date validation - must not be in the future
-const serviceDateSchema = z
-  .date()
-  .refine((date) => date <= new Date(), {
-    message: 'Service date cannot be in the future',
-  });
+const serviceDateSchema = z.date().refine((date) => date <= new Date(), {
+  message: 'Service date cannot be in the future',
+});
 
 // Positive number validation for monetary amounts
 const monetaryAmountSchema = z

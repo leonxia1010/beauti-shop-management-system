@@ -1,8 +1,8 @@
 import React from 'react';
-import { CheckCircle, AlertTriangle, XCircle, List } from 'lucide-react';
-import { Badge } from './badge';
-import { Button } from './button';
-import { cn } from '../../lib/utils';
+import { CheckCircle, AlertTriangle, List } from 'lucide-react';
+import { Badge } from '../badge';
+import { Button } from '../button';
+import { cn } from '../../../lib/utils';
 
 export type StatusType = 'all' | 'normal' | 'exception' | 'confirmed';
 

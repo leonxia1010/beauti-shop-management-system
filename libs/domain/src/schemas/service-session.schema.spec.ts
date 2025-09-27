@@ -1,7 +1,6 @@
 import {
   serviceSessionSchema,
   createServiceSessionSchema,
-  updateServiceSessionSchema,
   bulkImportServiceSessionSchema,
 } from './service-session.schema';
 import { PaymentMethod } from '../models/service-session.model';

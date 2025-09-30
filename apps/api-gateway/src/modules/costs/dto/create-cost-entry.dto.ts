@@ -3,6 +3,7 @@ import {
   IsNumber,
   IsPositive,
   IsOptional,
+  IsDateString,
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -24,6 +25,9 @@ export class CreateCostEntryDto {
   @IsPositive()
   @Transform(({ value }) => parseFloat(value))
   amount: number;
+
+  @IsDateString()
+  entry_date: string;
 
   @IsOptional()
   @IsString()

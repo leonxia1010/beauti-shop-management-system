@@ -8,9 +8,7 @@ export class CsvParserService {
   /**
    * Parse CSV or Excel file and return array of CreateServiceSessionDto
    */
-  async parseFile(
-    file: Express.Multer.File
-  ): Promise<CreateServiceSessionDto[]> {
+  async parseFile(file: any): Promise<CreateServiceSessionDto[]> {
     const fileExtension = this.getFileExtension(file.originalname);
 
     if (fileExtension === 'csv') {
@@ -27,9 +25,7 @@ export class CsvParserService {
   /**
    * Parse CSV file
    */
-  private async parseCsvFile(
-    file: Express.Multer.File
-  ): Promise<CreateServiceSessionDto[]> {
+  private async parseCsvFile(file: any): Promise<CreateServiceSessionDto[]> {
     return new Promise((resolve, reject) => {
       const records: CreateServiceSessionDto[] = [];
       const parser = csv.parse({
@@ -65,7 +61,7 @@ export class CsvParserService {
   /**
    * Parse Excel file
    */
-  private parseExcelFile(file: Express.Multer.File): CreateServiceSessionDto[] {
+  private parseExcelFile(file: any): CreateServiceSessionDto[] {
     try {
       const workbook = XLSX.read(file.buffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];

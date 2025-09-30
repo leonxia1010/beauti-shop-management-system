@@ -40,7 +40,7 @@ export class RevenueController {
   @Post('bulk-import')
   @UseInterceptors(FileInterceptor('file'))
   async bulkImport(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
     @Body('store_id') storeId: string
   ): Promise<BulkImportResponseDto> {
     if (!file) {

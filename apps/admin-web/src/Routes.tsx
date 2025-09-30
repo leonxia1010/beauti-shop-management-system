@@ -1,9 +1,8 @@
 import { RouteObject } from 'react-router-dom';
 import { HomePage } from './pages/Home';
-import { RevenueListPage } from './pages/revenue/RevenueList';
-import { BulkImportPage } from './pages/revenue/BulkImport';
-import { CostsPage } from './pages/Costs';
-import { ReportsPage } from './pages/Reports';
+import { RevenuePage } from './pages/revenue';
+import { CostsPage } from './pages/costs';
+import { ReportsPage } from './pages/reports/index';
 
 export const routes: RouteObject[] = [
   {
@@ -12,11 +11,7 @@ export const routes: RouteObject[] = [
   },
   {
     path: '/revenue',
-    element: <RevenueListPage />,
-  },
-  {
-    path: '/revenue/bulk-import',
-    element: <BulkImportPage />,
+    element: <RevenuePage />,
   },
   {
     path: '/costs',

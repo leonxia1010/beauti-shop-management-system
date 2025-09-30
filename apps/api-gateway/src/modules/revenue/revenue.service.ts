@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import { ExceptionDetectionService } from '../exception-detection/exception-detection.service';
+import { getRevenueShareRule } from './revenue-business-rules.config';
 import {
   CreateServiceSessionDto,
   UpdateServiceSessionDto,
@@ -14,6 +16,7 @@ export class RevenueService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
     private readonly exceptionDetectionService: ExceptionDetectionService
   ) {}
 
@@ -34,6 +37,16 @@ export class RevenueService {
 
     // Run exception detection after creation
     await this.exceptionDetectionService.validateRevenueData(data, session.id);
+
+    // Log the creation in audit trail
+    await this.auditService.logAction({
+      table_name: 'service_sessions',
+      record_id: session.id,
+      action: 'CREATE',
+      new_values: session,
+      changed_by: 'system', // TODO: Replace with actual user ID from auth context
+      store_id: session.store_id,
+    });
 
     this.logger.log(
       `Created service session ${session.id} for store ${session.store_id}`
@@ -104,6 +117,11 @@ export class RevenueService {
     id: string,
     data: UpdateServiceSessionDto
   ): Promise<ServiceSession> {
+    // Get existing session for audit trail
+    const existingSession = await this.prisma.serviceSession.findUnique({
+      where: { id },
+    });
+
     // Recalculate shares if gross_revenue is updated
     const updateData = data.gross_revenue
       ? { ...data, ...this.calculateBeauticianShares(data.gross_revenue) }
@@ -112,6 +130,17 @@ export class RevenueService {
     const session = await this.prisma.serviceSession.update({
       where: { id },
       data: updateData,
+    });
+
+    // Log the update in audit trail
+    await this.auditService.logAction({
+      table_name: 'service_sessions',
+      record_id: id,
+      action: 'UPDATE',
+      old_values: existingSession,
+      new_values: session,
+      changed_by: 'system', // TODO: Replace with actual user ID from auth context
+      store_id: session.store_id,
     });
 
     this.logger.log(`Updated service session ${session.id}`);
@@ -129,16 +158,30 @@ export class RevenueService {
   }
 
   /**
-   * Business rule engine: Calculate beautician shares based on 4/6 split
-   * Beautician gets 60% of gross revenue, store gets 40%
+   * Business rule engine: Calculate beautician shares based on configurable rules
+   *
+   * Uses getRevenueShareRule() to retrieve the applicable split percentage.
+   * Default: Beautician gets 60%, Store gets 40%
+   *
+   * @param grossRevenue - The gross revenue amount
+   * @param context - Optional context for rule selection (future use)
    */
-  private calculateBeauticianShares(grossRevenue: number) {
-    const beauticianShare = Math.round(grossRevenue * 0.6 * 100) / 100; // 60%
-    const netRevenue = Math.round((grossRevenue - beauticianShare) * 100) / 100; // 40%
+  private calculateBeauticianShares(
+    grossRevenue: number,
+    context?: { storeId?: string; beauticianId?: string }
+  ) {
+    const rule = getRevenueShareRule(context);
+
+    const beauticianShare =
+      Math.round(((grossRevenue * rule.beauticianSharePercent) / 100) * 100) /
+      100;
+
+    const netRevenue =
+      Math.round(((grossRevenue * rule.storeSharePercent) / 100) * 100) / 100;
 
     return {
       beautician_share: beauticianShare,
-      subsidy: 0, // Default subsidy, can be overridden
+      subsidy: rule.defaultSubsidy,
       net_revenue: netRevenue,
     };
   }

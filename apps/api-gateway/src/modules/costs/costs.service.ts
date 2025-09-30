@@ -66,6 +66,7 @@ export class CostsService {
 
     const where: Prisma.CostEntryWhereInput = {
       store_id,
+      deleted_at: null, // Only include non-deleted entries
       ...(category && {
         category: { contains: category, mode: 'insensitive' },
       }),
@@ -73,7 +74,7 @@ export class CostsService {
       ...(allocation_rule_id && { allocation_rule_id }),
       ...(date_from &&
         date_to && {
-          created_at: {
+          entry_date: {
             gte: new Date(date_from),
             lte: new Date(date_to),
           },
@@ -175,15 +176,11 @@ export class CostsService {
     // Get the existing entry for audit purposes
     const existingEntry = await this.getCostEntryById(id);
 
-    // For demonstration, we'll add a deleted_at field (would need to add this to Prisma schema)
-    // For now, we'll use a soft delete approach by updating a flag or moving to deleted table
-
-    // Since we don't have a soft delete field in the current schema,
-    // we'll implement it by adding a category prefix to mark as deleted
+    // Perform soft delete by setting deleted_at timestamp
     const updatedEntry = await this.prisma.costEntry.update({
       where: { id },
       data: {
-        category: `[DELETED] ${existingEntry.category}`,
+        deleted_at: new Date(),
         updated_at: new Date(),
       },
     });

@@ -5,11 +5,7 @@ import { PaymentMethod } from '../models/service-session.model';
 const uuidSchema = z.string().uuid('Invalid UUID format');
 
 // PaymentMethod enum schema
-const paymentMethodSchema = z.nativeEnum(PaymentMethod, {
-  errorMap: () => ({
-    message: 'Payment method must be one of: cash, transfer, other',
-  }),
-});
+const paymentMethodSchema = z.nativeEnum(PaymentMethod);
 
 // Service date validation - must not be in the future
 const serviceDateSchema = z.date().refine((date) => date <= new Date(), {

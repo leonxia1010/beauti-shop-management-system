@@ -1,0 +1,13 @@
+trace:
+  totals:
+    requirements: 6
+    full: 1
+    partial: 3
+    none: 2
+  planning_ref: 'docs/qa/assessments/1.2.revenue-cost-data-management-test-design-20250926.md'
+  uncovered:
+    - ac: 'AC3'
+      reason: 'No tests found for 4/6 split business rule calculations'
+    - ac: 'AC4'
+      reason: 'No tests found for daily report generation and aggregation'
+  notes: 'See docs/qa/assessments/1.2.revenue-cost-data-management-trace-20250926.md'

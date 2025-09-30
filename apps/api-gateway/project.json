@@ -59,6 +59,14 @@
           "buildTarget": "api-gateway:build:production"
         }
       }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "config": "apps/api-gateway/vite.config.ts",
+        "passWithNoTests": true
+      }
     }
   },
   "tags": []

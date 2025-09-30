@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-EXPOSE 3000
+EXPOSE 3010
 EXPOSE 9229
 CMD ["npm", "run", "start:dev"]
 
@@ -28,6 +28,6 @@ WORKDIR /app
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY package*.json ./
-EXPOSE 3000
+EXPOSE 3010
 USER node
 CMD ["node", "dist/main"]

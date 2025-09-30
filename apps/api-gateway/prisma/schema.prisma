@@ -1,0 +1,187 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Stores table for basic store information
+model Store {
+  id         String   @id @default(cuid())
+  name       String
+  code       String   @unique
+  address    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  sessions ServiceSession[]
+  costs    CostEntry[]
+
+  @@map("stores")
+}
+
+// Beauticians table for basic beautician information
+model Beautician {
+  id          String   @id @default(cuid())
+  name        String
+  employee_id String   @unique
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  sessions ServiceSession[]
+
+  @@map("beauticians")
+}
+
+// Service sessions table for revenue data management
+model ServiceSession {
+  id             String        @id @default(cuid())
+  store_id       String
+  beautician_id  String
+  service_date   DateTime      @db.Date
+  gross_revenue  Decimal       @db.Decimal(12, 2)
+  payment_method PaymentMethod
+
+  // Calculated fields derived from business rules
+  beautician_share Decimal? @db.Decimal(12, 2)
+  subsidy          Decimal? @db.Decimal(12, 2)
+  net_revenue      Decimal? @db.Decimal(12, 2)
+
+  // Audit fields
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  entry_channel  String? // 'bulk_import', 'manual_entry', 'api'
+  exception_flag Boolean  @default(false)
+
+  // Relations
+  store      Store      @relation(fields: [store_id], references: [id])
+  beautician Beautician @relation(fields: [beautician_id], references: [id])
+
+  @@index([store_id])
+  @@index([service_date])
+  @@index([beautician_id])
+  @@index([store_id, service_date])
+  @@map("service_sessions")
+}
+
+// Cost entries table for cost data management
+model CostEntry {
+  id                 String   @id @default(cuid())
+  store_id           String
+  category           String
+  payer              String
+  amount             Decimal  @db.Decimal(12, 2)
+  allocation_rule_id String?
+  entry_date         DateTime @default(now()) @db.Date // Date when the cost was incurred
+
+  // Audit fields
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  created_by String // UUID of the user who created the entry
+  deleted_at DateTime? // Soft delete timestamp
+
+  // Relations
+  store Store @relation(fields: [store_id], references: [id])
+
+  @@index([store_id])
+  @@index([category])
+  @@index([entry_date])
+  @@index([created_at])
+  @@index([store_id, category])
+  @@index([deleted_at])
+  @@map("cost_entries")
+}
+
+// Audit logs table for tracking all data changes
+model AuditLog {
+  id         String      @id @default(cuid())
+  table_name String
+  record_id  String
+  action     AuditAction
+  old_values Json?
+  new_values Json?
+  changed_by String // UUID of the user who made the change
+  request_id String? // For correlation across operations
+  store_id   String // For store-scoped access
+  timestamp  DateTime    @default(now())
+
+  @@index([table_name])
+  @@index([record_id])
+  @@index([changed_by])
+  @@index([store_id])
+  @@index([timestamp])
+  @@index([table_name, record_id])
+  @@map("audit_logs")
+}
+
+// Audit action enumeration
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+
+  @@map("audit_action")
+}
+
+// Exception records table for storing detected anomalies
+model ExceptionRecord {
+  id             String            @id @default(cuid())
+  table_name     String // 'service_sessions' or 'cost_entries'
+  record_id      String // ID of the problematic record
+  exception_type ExceptionType
+  severity       ExceptionSeverity
+  message        String // Human-readable description
+  field_name     String? // Which field caused the exception
+  field_value    String? // The problematic value
+  rule_name      String // Name of the validation rule that failed
+  store_id       String // For store-scoped access
+  resolved       Boolean           @default(false)
+  resolved_by    String? // Who resolved the exception
+  resolved_at    DateTime? // When it was resolved
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+
+  @@index([table_name])
+  @@index([record_id])
+  @@index([store_id])
+  @@index([severity])
+  @@index([resolved])
+  @@index([created_at])
+  @@map("exception_records")
+}
+
+// Exception type enumeration
+enum ExceptionType {
+  VALIDATION_ERROR
+  BUSINESS_RULE_VIOLATION
+  DATA_ANOMALY
+  SUSPICIOUS_ACTIVITY
+
+  @@map("exception_type")
+}
+
+// Exception severity enumeration
+enum ExceptionSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("exception_severity")
+}
+
+// Payment method enumeration
+enum PaymentMethod {
+  cash
+  transfer
+  other
+
+  @@map("payment_method")
+}

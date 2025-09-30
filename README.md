@@ -84,7 +84,7 @@ npm run db:start
 ### 5️⃣ Launch Applications
 
 ```bash
-# Start API service (localhost:3000)
+# Start API service (localhost:3010)
 npm run dev:api
 
 # Start Web admin dashboard (localhost:4200)
@@ -142,7 +142,7 @@ npm run affected:build  # Build only affected projects
 | Service        | URL                       | Description          |
 | -------------- | ------------------------- | -------------------- |
 | 🌐 Admin Web   | http://localhost:4200     | Management dashboard |
-| 🚀 API Gateway | http://localhost:3000/api | REST API service     |
+| 🚀 API Gateway | http://localhost:3010/api | REST API service     |
 | 🗄️ PostgreSQL  | localhost:5432            | Primary database     |
 | 🔴 Redis       | localhost:6379            | Cache service        |
 

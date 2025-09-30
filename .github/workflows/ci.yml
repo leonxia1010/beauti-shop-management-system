@@ -14,6 +14,32 @@ jobs:
   quality-check:
     runs-on: ubuntu-latest
     name: Quality Check (Lint, Test, Build)
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: beauty_shop
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,6 +55,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup database
+        run: |
+          cd apps/api-gateway
+          npx prisma generate
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/beauty_shop
+
       - name: Run linting
         run: npm run lint
 
@@ -37,6 +71,9 @@ jobs:
 
       - name: Run tests
         run: npm run test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/beauty_shop
+          REDIS_URL: redis://localhost:6379
 
       - name: Build applications
         run: |

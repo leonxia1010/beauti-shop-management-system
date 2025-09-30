@@ -2,13 +2,20 @@
 
 ## Core Principles
 
-### SOLID, KISS, DRY
+### !IMPORTANT: SOLID, KISS, DRY
+
+#### SOLID Principles
 
 - **Single Responsibility**: Each function/class does one thing well
-- **Keep It Simple**: Avoid premature abstractions and clever code
-- **Don't Repeat Yourself**: Extract shared logic to `libs/`
+- **Open/Closed**: Open for extension, closed for modification (use interfaces/inheritance)
+- **Liskov Substitution**: Derived classes must be substitutable for their base classes
 - **Interface Segregation**: Small, focused interfaces over large ones
 - **Dependency Inversion**: Depend on abstractions, not concrete implementations
+
+#### KISS & DRY
+
+- **Keep It Simple**: Avoid premature abstractions and clever code
+- **Don't Repeat Yourself**: Extract shared logic to `libs/`
 
 ### Type Safety
 

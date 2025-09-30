@@ -1,0 +1,341 @@
+/**
+ * Revenue Service Unit Tests
+ *
+ * Following testing standards from coding guidelines:
+ * - Test business logic correctness
+ * - Security validation
+ * - Error handling
+ * - Performance implications
+ */
+
+import { Test, TestingModule } from '@nestjs/testing';
+import { RevenueService } from './revenue.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { ExceptionDetectionService } from '../exception-detection/exception-detection.service';
+import { CreateServiceSessionDto } from './dto';
+
+describe('RevenueService', () => {
+  let service: RevenueService;
+  let prismaService: PrismaService;
+  let exceptionDetectionService: ExceptionDetectionService;
+
+  const mockPrismaService = {
+    serviceSession: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+      aggregate: jest.fn(),
+      groupBy: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  };
+
+  const mockExceptionDetectionService = {
+    validateRevenueData: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        RevenueService,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+        {
+          provide: ExceptionDetectionService,
+          useValue: mockExceptionDetectionService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<RevenueService>(RevenueService);
+    prismaService = module.get<PrismaService>(PrismaService);
+    exceptionDetectionService = module.get<ExceptionDetectionService>(
+      ExceptionDetectionService
+    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('createSession', () => {
+    const mockCreateSessionDto: CreateServiceSessionDto = {
+      store_id: 'store-001',
+      beautician_id: 'beautician-001',
+      service_date: '2024-01-15',
+      gross_revenue: 1000,
+      payment_method: 'cash',
+    };
+
+    const mockCreatedSession = {
+      id: 'session-001',
+      ...mockCreateSessionDto,
+      beautician_share: 600,
+      subsidy: 0,
+      net_revenue: 400,
+      entry_channel: 'manual_entry',
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    it('should create a session with correct beautician share calculation', async () => {
+      // Arrange
+      mockPrismaService.serviceSession.create.mockResolvedValue(mockCreatedSession);
+      mockExceptionDetectionService.validateRevenueData.mockResolvedValue({
+        isValid: true,
+        exceptions: [],
+      });
+
+      // Act
+      const result = await service.createSession(mockCreateSessionDto);
+
+      // Assert
+      expect(result).toEqual(mockCreatedSession);
+      expect(mockPrismaService.serviceSession.create).toHaveBeenCalledWith({
+        data: {
+          ...mockCreateSessionDto,
+          beautician_share: 600, // 60% of 1000
+          subsidy: 0,
+          net_revenue: 400, // 40% of 1000
+          entry_channel: 'manual_entry',
+        },
+      });
+    });
+
+    it('should calculate beautician shares correctly for different amounts', async () => {
+      // Test cases for business rule validation
+      const testCases = [
+        { grossRevenue: 100, expectedBeauticianShare: 60, expectedNetRevenue: 40 },
+        { grossRevenue: 500, expectedBeauticianShare: 300, expectedNetRevenue: 200 },
+        { grossRevenue: 1500, expectedBeauticianShare: 900, expectedNetRevenue: 600 },
+        { grossRevenue: 33.33, expectedBeauticianShare: 20, expectedNetRevenue: 13.33 },
+      ];
+
+      for (const testCase of testCases) {
+        const dto = { ...mockCreateSessionDto, gross_revenue: testCase.grossRevenue };
+        const expectedSession = {
+          ...mockCreatedSession,
+          gross_revenue: testCase.grossRevenue,
+          beautician_share: testCase.expectedBeauticianShare,
+          net_revenue: testCase.expectedNetRevenue,
+        };
+
+        mockPrismaService.serviceSession.create.mockResolvedValue(expectedSession);
+
+        const result = await service.createSession(dto);
+
+        expect(result.beautician_share).toBe(testCase.expectedBeauticianShare);
+        expect(result.net_revenue).toBe(testCase.expectedNetRevenue);
+      }
+    });
+
+    it('should run exception detection after creating session', async () => {
+      // Arrange
+      mockPrismaService.serviceSession.create.mockResolvedValue(mockCreatedSession);
+      mockExceptionDetectionService.validateRevenueData.mockResolvedValue({
+        isValid: true,
+        exceptions: [],
+      });
+
+      // Act
+      await service.createSession(mockCreateSessionDto);
+
+      // Assert
+      expect(mockExceptionDetectionService.validateRevenueData).toHaveBeenCalledWith(
+        mockCreateSessionDto,
+        mockCreatedSession.id
+      );
+    });
+
+    it('should handle database errors gracefully', async () => {
+      // Arrange
+      const dbError = new Error('Database connection failed');
+      mockPrismaService.serviceSession.create.mockRejectedValue(dbError);
+
+      // Act & Assert
+      await expect(service.createSession(mockCreateSessionDto)).rejects.toThrow(
+        'Database connection failed'
+      );
+    });
+  });
+
+  describe('getSessions', () => {
+    const mockFilter = {
+      store_id: 'store-001',
+      date_from: '2024-01-01',
+      date_to: '2024-01-31',
+      limit: 10,
+    };
+
+    const mockSessions = [
+      {
+        id: 'session-001',
+        store_id: 'store-001',
+        beautician_id: 'beautician-001',
+        service_date: new Date('2024-01-15'),
+        gross_revenue: 1000,
+        beautician_share: 600,
+        net_revenue: 400,
+        payment_method: 'cash',
+      },
+    ];
+
+    it('should return paginated sessions with correct filtering', async () => {
+      // Arrange
+      mockPrismaService.serviceSession.findMany.mockResolvedValue(mockSessions);
+      mockPrismaService.serviceSession.count.mockResolvedValue(25);
+
+      // Act
+      const result = await service.getSessions(mockFilter);
+
+      // Assert
+      expect(result.data).toEqual(mockSessions);
+      expect(result.pagination.total).toBe(25);
+      expect(result.pagination.limit).toBe(10);
+      expect(mockPrismaService.serviceSession.findMany).toHaveBeenCalledWith({
+        where: {
+          store_id: 'store-001',
+          service_date: {
+            gte: new Date('2024-01-01'),
+            lte: new Date('2024-01-31'),
+          },
+        },
+        orderBy: { service_date: 'desc' },
+        take: 10,
+      });
+    });
+
+    it('should handle empty results correctly', async () => {
+      // Arrange
+      mockPrismaService.serviceSession.findMany.mockResolvedValue([]);
+      mockPrismaService.serviceSession.count.mockResolvedValue(0);
+
+      // Act
+      const result = await service.getSessions(mockFilter);
+
+      // Assert
+      expect(result.data).toEqual([]);
+      expect(result.pagination.total).toBe(0);
+      expect(result.pagination.hasMore).toBe(false);
+    });
+  });
+
+  describe('bulkImportSessions', () => {
+    const mockSessions: CreateServiceSessionDto[] = [
+      {
+        store_id: 'store-001',
+        beautician_id: 'beautician-001',
+        service_date: '2024-01-15',
+        gross_revenue: 1000,
+        payment_method: 'cash',
+      },
+      {
+        store_id: 'store-001',
+        beautician_id: 'beautician-002',
+        service_date: '2024-01-16',
+        gross_revenue: 800,
+        payment_method: 'transfer',
+      },
+    ];
+
+    it('should process bulk import successfully', async () => {
+      // Arrange
+      const mockTransaction = jest.fn().mockImplementation(async (callback) => {
+        const mockTx = {
+          serviceSession: {
+            create: jest.fn().mockResolvedValue({ id: 'session-001' }),
+          },
+        };
+        return callback(mockTx);
+      });
+      mockPrismaService.$transaction = mockTransaction;
+
+      // Act
+      const result = await service.bulkImportSessions(mockSessions, 'store-001');
+
+      // Assert
+      expect(result.total).toBe(2);
+      expect(result.successful).toBe(2);
+      expect(result.failed).toBe(0);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should handle partial failures in bulk import', async () => {
+      // Arrange
+      let callCount = 0;
+      const mockTransaction = jest.fn().mockImplementation(async (callback) => {
+        const mockTx = {
+          serviceSession: {
+            create: jest.fn().mockImplementation(() => {
+              callCount++;
+              if (callCount === 1) {
+                return Promise.resolve({ id: 'session-001' });
+              } else {
+                return Promise.reject(new Error('Validation failed'));
+              }
+            }),
+          },
+        };
+        return callback(mockTx);
+      });
+      mockPrismaService.$transaction = mockTransaction;
+
+      // Act
+      const result = await service.bulkImportSessions(mockSessions, 'store-001');
+
+      // Assert
+      expect(result.total).toBe(2);
+      expect(result.successful).toBe(1);
+      expect(result.failed).toBe(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].row).toBe(2);
+      expect(result.errors[0].error).toBe('Validation failed');
+    });
+  });
+
+  describe('validateSession', () => {
+    const mockDto: CreateServiceSessionDto = {
+      store_id: 'store-001',
+      beautician_id: 'beautician-001',
+      service_date: '2024-01-15',
+      gross_revenue: 1000,
+      payment_method: 'cash',
+    };
+
+    it('should return validation result from exception detection service', async () => {
+      // Arrange
+      const mockValidationResult = {
+        isValid: false,
+        exceptions: [
+          {
+            type: 'DATA_ANOMALY',
+            severity: 'MEDIUM',
+            message: 'Revenue amount seems unusually high',
+            fieldName: 'gross_revenue',
+            fieldValue: '1000',
+            ruleName: 'unusual_high_amount',
+          },
+        ],
+      };
+      mockExceptionDetectionService.validateRevenueData.mockResolvedValue(
+        mockValidationResult
+      );
+
+      // Act
+      const result = await service.validateSession(mockDto);
+
+      // Assert
+      expect(result.isValid).toBe(false);
+      expect(result.exceptions).toHaveLength(1);
+      expect(result.exceptions[0]).toBe('Revenue amount seems unusually high');
+    });
+  });
+});

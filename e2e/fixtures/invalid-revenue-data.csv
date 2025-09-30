@@ -1,0 +1,11 @@
+store_id,beautician_id,service_date,gross_revenue,payment_method
+store-001,beautician-001,2024-01-15,150.00,cash
+store-001,beautician-002,2024-01-15,-280.50,transfer
+store-001,beautician-001,2024-01-16,abc,card
+store-002,beautician-003,2024/13/45,195.75,cash
+store-001,beautician-002,2024-01-17,,transfer
+store-002,,2024-01-18,225.00,card
+,beautician-001,2024-01-19,175.50,cash
+store-002,beautician-003,2024-01-20,380.00,invalid_method
+store-001,beautician-002,2024-01-21,290.75,
+store-002,beautician-004,2024-01-22,5000.00,cash

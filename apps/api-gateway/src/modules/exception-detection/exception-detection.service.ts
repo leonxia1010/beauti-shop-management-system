@@ -8,10 +8,10 @@ import {
 import { CreateServiceSessionDto } from '../revenue/dto';
 import { CreateCostEntryDto } from '../costs/dto';
 
-export interface ValidationRule {
+export interface ValidationRule<T = unknown> {
   name: string;
   description: string;
-  validator: (data: any) => ValidationResult;
+  validator: (data: T) => ValidationResult;
 }
 
 export interface ValidationResult {
@@ -31,8 +31,8 @@ export interface ExceptionInfo {
 @Injectable()
 export class ExceptionDetectionService {
   private readonly logger = new Logger(ExceptionDetectionService.name);
-  private readonly revenueRules: ValidationRule[] = [];
-  private readonly costRules: ValidationRule[] = [];
+  private readonly revenueRules: ValidationRule<CreateServiceSessionDto>[] = [];
+  private readonly costRules: ValidationRule<CreateCostEntryDto>[] = [];
 
   constructor(private readonly prisma: PrismaService) {
     this.initializeValidationRules();

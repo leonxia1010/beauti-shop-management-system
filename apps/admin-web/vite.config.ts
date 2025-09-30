@@ -35,6 +35,8 @@ export default defineConfig(async () => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
+        react: path.resolve(__dirname, '../../node_modules/react'),
+        'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
       },
     },
     // Uncomment this if you are using workers.
@@ -59,6 +61,12 @@ export default defineConfig(async () => {
       coverage: {
         reportsDirectory: '../../coverage/apps/admin-web',
         provider: 'v8' as const,
+      },
+      setupFiles: [],
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
+        react: path.resolve(__dirname, '../../node_modules/react'),
+        'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
       },
     },
   };

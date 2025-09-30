@@ -31,7 +31,7 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
-} from '../../components/ui/Dialog';
+} from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import {
   Select,

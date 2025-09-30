@@ -16,7 +16,11 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { ReportsService, DailyReportFilter } from './reports.service';
+import {
+  ReportsService,
+  DailyReportFilter,
+  DailyReport,
+} from './reports.service';
 import { IsString, IsDateString, IsOptional } from 'class-validator';
 
 class DailyReportQueryDto implements DailyReportFilter {
@@ -189,7 +193,7 @@ export class ReportsController {
   /**
    * Format report data for CSV export (KISS principle)
    */
-  private formatCSVData(report: any) {
+  private formatCSVData(report: DailyReport) {
     const csvData = {
       summary: [
         ['Period', `${report.period.start_date} to ${report.period.end_date}`],
@@ -199,7 +203,7 @@ export class ReportsController {
         ['Net Profit', report.summary.profit.net_profit],
         ['Profit Margin', `${report.summary.profit.profit_margin.toFixed(2)}%`],
       ],
-      daily_breakdown: report.daily_breakdown.map((day: any) => [
+      daily_breakdown: report.daily_breakdown.map((day) => [
         day.date,
         day.revenue.total_gross,
         day.revenue.session_count,
@@ -207,7 +211,7 @@ export class ReportsController {
         day.profit.net_profit,
       ]),
       beautician_performance: report.beautician_performance.map(
-        (beautician: any) => [
+        (beautician) => [
           beautician.beautician_name,
           beautician.total_revenue,
           beautician.session_count,

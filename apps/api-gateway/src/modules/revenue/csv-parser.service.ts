@@ -3,12 +3,19 @@ import { CreateServiceSessionDto } from './dto';
 import * as csv from 'csv-parse';
 import * as XLSX from 'xlsx';
 
+/** Multer file interface - uses any for compatibility with both test and production builds */
+interface UploadedFile {
+  originalname: string;
+  buffer: Buffer;
+  mimetype: string;
+}
+
 @Injectable()
 export class CsvParserService {
   /**
    * Parse CSV or Excel file and return array of CreateServiceSessionDto
    */
-  async parseFile(file: any): Promise<CreateServiceSessionDto[]> {
+  async parseFile(file: UploadedFile): Promise<CreateServiceSessionDto[]> {
     const fileExtension = this.getFileExtension(file.originalname);
 
     if (fileExtension === 'csv') {
@@ -25,7 +32,9 @@ export class CsvParserService {
   /**
    * Parse CSV file
    */
-  private async parseCsvFile(file: any): Promise<CreateServiceSessionDto[]> {
+  private async parseCsvFile(
+    file: UploadedFile
+  ): Promise<CreateServiceSessionDto[]> {
     return new Promise((resolve, reject) => {
       const records: CreateServiceSessionDto[] = [];
       const parser = csv.parse({
@@ -61,7 +70,7 @@ export class CsvParserService {
   /**
    * Parse Excel file
    */
-  private parseExcelFile(file: any): CreateServiceSessionDto[] {
+  private parseExcelFile(file: UploadedFile): CreateServiceSessionDto[] {
     try {
       const workbook = XLSX.read(file.buffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
@@ -77,6 +86,7 @@ export class CsvParserService {
       }
 
       const headers = jsonData[0] as string[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const dataRows = jsonData.slice(1) as any[][];
 
       const records: CreateServiceSessionDto[] = [];
@@ -85,11 +95,13 @@ export class CsvParserService {
         const row = dataRows[i];
         if (
           row.some(
-            (cell: any) => cell !== null && cell !== undefined && cell !== ''
+            (cell: unknown) =>
+              cell !== null && cell !== undefined && cell !== ''
           )
         ) {
           try {
             // Convert array to object using headers
+
             const rowObject = headers.reduce((obj, header, index) => {
               obj[header] = row[index];
               return obj;
@@ -118,7 +130,12 @@ export class CsvParserService {
    * Map row data to CreateServiceSessionDto
    * Expected columns: store_id, beautician_id, service_date, gross_revenue, payment_method, subsidy (optional)
    */
+  /**
+   * Map CSV/Excel row to DTO
+   * @param row - Uses `any` for dynamic property access from parsed CSV/Excel data
+   */
   private mapRowToServiceSession(row: any): CreateServiceSessionDto {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     // Validate required fields
     const requiredFields = [
       'store_id',
@@ -179,7 +196,9 @@ export class CsvParserService {
   /**
    * Parse date string to ISO format
    */
-  private parseDate(dateInput: any): string | null {
+  private parseDate(
+    dateInput: string | number | Date | null | undefined
+  ): string | null {
     if (!dateInput) return null;
 
     // Handle Excel serial date numbers

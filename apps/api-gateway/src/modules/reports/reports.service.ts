@@ -276,7 +276,10 @@ export class ReportsService {
   /**
    * Calculate summary totals (KISS principle - simple calculation)
    */
-  private calculateSummary(revenueData: any, costData: any): DailyReportData {
+  private calculateSummary(
+    revenueData: DailyReportData['revenue'],
+    costData: DailyReportData['costs']
+  ): DailyReportData {
     const grossProfit = revenueData.total_gross - costData.total_amount;
     const netProfit = revenueData.total_net - costData.total_amount;
     const profitMargin =

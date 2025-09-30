@@ -228,10 +228,14 @@ export class ExceptionDetectionService {
   /**
    * Run validation rules and store exceptions
    */
+  /**
+   * Run validation rules against data
+   * @param data - Uses `any` to accept various DTO types without index signature
+   */
   private async runValidationRules(
     tableName: string,
     rules: ValidationRule[],
-    data: any,
+    data: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     recordId?: string
   ): Promise<ValidationResult> {
     const allExceptions: ExceptionInfo[] = [];

@@ -5,8 +5,10 @@ export interface CostSummaryDto {
   count: number;
 }
 
+import { CostEntry } from '@prisma/client';
+
 export interface CostListResponseDto {
-  data: any[]; // CostEntry[] from Prisma
+  data: CostEntry[];
   pagination: {
     total: number;
     limit: number;

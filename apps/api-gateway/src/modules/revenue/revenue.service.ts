@@ -26,6 +26,7 @@ export class RevenueService {
   async createSession(data: CreateServiceSessionDto): Promise<ServiceSession> {
     const sessionData = {
       ...data,
+      service_date: new Date(data.service_date),
       // Apply business rules for beautician share calculation
       ...this.calculateBeauticianShares(data.gross_revenue),
       entry_channel: 'manual_entry',
@@ -197,7 +198,7 @@ export class RevenueService {
       total: sessions.length,
       successful: 0,
       failed: 0,
-      errors: [] as Array<{ row: number; error: string; data: any }>,
+      errors: [] as Array<{ row: number; error: string; data: unknown }>,
     };
 
     // Process sessions in transaction for consistency
@@ -206,6 +207,7 @@ export class RevenueService {
         try {
           const sessionData = {
             ...sessions[i],
+            service_date: new Date(sessions[i].service_date),
             store_id: storeId, // Enforce store scope
             ...this.calculateBeauticianShares(sessions[i].gross_revenue),
             entry_channel: 'bulk_import',

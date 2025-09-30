@@ -12,9 +12,9 @@ import { ReportsModule } from '../modules/reports/reports.module';
   imports: [
     PrismaModule,
     AuditModule,
+    ExceptionDetectionModule,
     RevenueModule,
     CostsModule,
-    ExceptionDetectionModule,
     ReportsModule,
   ],
   controllers: [AppController],

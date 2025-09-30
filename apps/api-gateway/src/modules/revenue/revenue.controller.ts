@@ -40,7 +40,7 @@ export class RevenueController {
   @Post('bulk-import')
   @UseInterceptors(FileInterceptor('file'))
   async bulkImport(
-    @UploadedFile() file: any,
+    @UploadedFile() file: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     @Body('store_id') storeId: string
   ): Promise<BulkImportResponseDto> {
     if (!file) {
@@ -83,8 +83,11 @@ export class RevenueController {
 
       // Filter out invalid sessions and collect validation errors
       const validSessions: CreateServiceSessionDto[] = [];
-      const validationErrors: Array<{ row: number; error: string; data: any }> =
-        [];
+      const validationErrors: Array<{
+        row: number;
+        error: string;
+        data: unknown;
+      }> = [];
 
       for (const result of validationResults) {
         if (result.isValid) {
@@ -117,6 +120,19 @@ export class RevenueController {
       this.logger.error(`Bulk import failed: ${error.message}`, error.stack);
       throw new BadRequestException(`Failed to process file: ${error.message}`);
     }
+  }
+
+  /**
+   * POST /api/v1/revenue/validate
+   * Validate session data without creating it
+   * IMPORTANT: Must be before /sessions POST to avoid route collision
+   */
+  @Post('validate')
+  async validateSession(
+    @Body(ValidationPipe) createDto: CreateServiceSessionDto
+  ): Promise<{ isValid: boolean; exceptions: string[] }> {
+    this.logger.log(`Validating session data for store ${createDto.store_id}`);
+    return this.revenueService.validateSession(createDto);
   }
 
   /**

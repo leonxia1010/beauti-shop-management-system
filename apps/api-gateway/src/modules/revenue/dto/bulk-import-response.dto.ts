@@ -1,7 +1,7 @@
 export interface BulkImportError {
   row: number;
   error: string;
-  data: any;
+  data: unknown;
 }
 
 export interface BulkImportResponseDto {

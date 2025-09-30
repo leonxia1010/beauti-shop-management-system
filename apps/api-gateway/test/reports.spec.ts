@@ -37,15 +37,51 @@ describe('Reports API (e2e)', () => {
     await prismaService.costEntry.deleteMany({
       where: { store_id: 'test-store' },
     });
+    await prismaService.store.deleteMany({
+      where: { id: 'test-store' },
+    });
+    await prismaService.beautician.deleteMany({
+      where: { id: { in: ['beautician-001', 'beautician-002'] } },
+    });
+
+    // Create test fixtures
+    await prismaService.store.create({
+      data: {
+        id: 'test-store',
+        name: 'Test Store',
+        code: 'TEST001',
+      },
+    });
+
+    await prismaService.beautician.createMany({
+      data: [
+        {
+          id: 'beautician-001',
+          name: 'Test Beautician 1',
+          employee_id: 'BEAU001',
+        },
+        {
+          id: 'beautician-002',
+          name: 'Test Beautician 2',
+          employee_id: 'BEAU002',
+        },
+      ],
+    });
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data (child tables first)
     await prismaService.serviceSession.deleteMany({
       where: { store_id: 'test-store' },
     });
     await prismaService.costEntry.deleteMany({
       where: { store_id: 'test-store' },
+    });
+    await prismaService.beautician.deleteMany({
+      where: { id: { in: ['beautician-001', 'beautician-002'] } },
+    });
+    await prismaService.store.deleteMany({
+      where: { id: 'test-store' },
     });
 
     await prismaService.$disconnect();

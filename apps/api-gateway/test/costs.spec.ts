@@ -34,12 +34,27 @@ describe('Costs API (e2e)', () => {
     await prismaService.costEntry.deleteMany({
       where: { store_id: 'test-store' },
     });
+    await prismaService.store.deleteMany({
+      where: { id: 'test-store' },
+    });
+
+    // Create test fixtures
+    await prismaService.store.create({
+      data: {
+        id: 'test-store',
+        name: 'Test Store',
+        code: 'TEST001',
+      },
+    });
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data (child tables first)
     await prismaService.costEntry.deleteMany({
       where: { store_id: 'test-store' },
+    });
+    await prismaService.store.deleteMany({
+      where: { id: 'test-store' },
     });
 
     await prismaService.$disconnect();

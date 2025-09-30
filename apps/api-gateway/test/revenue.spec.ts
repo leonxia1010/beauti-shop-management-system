@@ -34,12 +34,41 @@ describe('Revenue API (e2e)', () => {
     await prismaService.serviceSession.deleteMany({
       where: { store_id: 'test-store' },
     });
+    await prismaService.store.deleteMany({
+      where: { id: 'test-store' },
+    });
+    await prismaService.beautician.deleteMany({
+      where: { id: 'beautician-001' },
+    });
+
+    // Create test fixtures
+    await prismaService.store.create({
+      data: {
+        id: 'test-store',
+        name: 'Test Store',
+        code: 'TEST001',
+      },
+    });
+
+    await prismaService.beautician.create({
+      data: {
+        id: 'beautician-001',
+        name: 'Test Beautician',
+        employee_id: 'BEAU001',
+      },
+    });
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data (child tables first)
     await prismaService.serviceSession.deleteMany({
       where: { store_id: 'test-store' },
+    });
+    await prismaService.beautician.deleteMany({
+      where: { id: 'beautician-001' },
+    });
+    await prismaService.store.deleteMany({
+      where: { id: 'test-store' },
     });
 
     await prismaService.$disconnect();

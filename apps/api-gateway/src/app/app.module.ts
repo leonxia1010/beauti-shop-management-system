@@ -6,6 +6,7 @@ import { AuditModule } from '../modules/audit/audit.module';
 import { RevenueModule } from '../modules/revenue/revenue.module';
 import { CostsModule } from '../modules/costs/costs.module';
 import { ExceptionDetectionModule } from '../modules/exception-detection/exception-detection.module';
+import { ReportsModule } from '../modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ExceptionDetectionModule } from '../modules/exception-detection/excepti
     RevenueModule,
     CostsModule,
     ExceptionDetectionModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,6 @@
+store_id,beautician_id,service_date,gross_revenue,payment_method
+store-001,beautician-001,2024-01-15,150.00,cash
+store-001,beautician-002,2024-01-15,280.50,transfer
+store-001,beautician-001,2024-01-16,320.00,wechat
+store-001,beautician-003,2024-01-16,450.00,cash
+store-001,beautician-002,2024-01-17,180.00,alipay
